@@ -63,6 +63,7 @@ export interface ExecutionResult {
   duration: string;
   memory: string;
   exitCode: number;
+  sandboxAvailable?: boolean;
 }
 
 export interface WorkspaceFile {
@@ -71,6 +72,10 @@ export interface WorkspaceFile {
   languageId: string;
   content: string;
   isModified?: boolean;
+  // Backward-compatible fields used by the current workspace UI.
+  language?: string;
+  isEntry?: boolean;
+  lastModified?: string;
 }
 
 // GitHub In-App Platform Types
