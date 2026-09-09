@@ -12,15 +12,6 @@ if (!source.includes(importLine)) {
   throw new Error("Expected polyglotEngine import was not found in server.ts");
 }
 
-const startMarker = "// 4. Code Execution / Simulation Engine";
-const endMarker = "// 5. GitHub Integration API";
-const start = source.indexOf(startMarker);
-const end = source.indexOf(endMarker);
-
-if (start === -1 || end === -1 || end <= start) {
-  throw new Error("Could not locate the existing /api/execute route markers");
-}
-
 const secureRoute = `// 4. Secure Code Execution Engine
 app.post("/api/execute", async (req, res) => {
   const startTime = Date.now();
@@ -65,6 +56,16 @@ const withImport = source.replace(
   importLine,
   `${importLine}\nimport { executeInSandbox } from "./src/server/sandboxExecution";`
 );
+
+const startMarker = "// 4. Code Execution / Simulation Engine";
+const endMarker = "// 5. GitHub Integration API";
+const start = withImport.indexOf(startMarker);
+const end = withImport.indexOf(endMarker);
+
+if (start === -1 || end === -1 || end <= start) {
+  throw new Error("Could not locate the existing /api/execute route markers");
+}
+
 const patched = withImport.slice(0, start) + secureRoute + withImport.slice(end);
 fs.writeFileSync(path, patched);
 console.log("Applied secure /api/execute route to server.ts");
