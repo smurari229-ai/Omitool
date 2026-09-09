@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  ProgrammingLanguage, 
-  ChatMessage, 
-  DebugReport, 
+import {
+  ProgrammingLanguage,
+  ChatMessage,
+  DebugReport,
   ExecutionResult,
   WorkspaceFile
 } from './types';
@@ -16,26 +16,22 @@ import { AIChatPanel } from './components/AIChatPanel';
 import { LanguageSelectorModal } from './components/LanguageSelectorModal';
 
 export default function App() {
-  // Default language: Python
   const [currentLanguage, setCurrentLanguage] = useState<ProgrammingLanguage>(() => {
     return PROGRAMMING_LANGUAGES.find((l) => l.id === 'python') || PROGRAMMING_LANGUAGES[0];
   });
 
-  // Active Platform: 'replit' | 'github' | 'vercel' | 'debugger'
   const [activePlatform, setActivePlatform] = useState<ActivePlatform>('replit');
   const [isAiDrawerOpen, setIsAiDrawerOpen] = useState(false);
   const [isLangModalOpen, setIsLangModalOpen] = useState(false);
   const [useWebSearch, setUseWebSearch] = useState(true);
-
-  // Active Code
   const [code, setCode] = useState<string>(() => currentLanguage.defaultCode);
 
-  // Shared Multi-File Workspace State
   const [workspaceFiles, setWorkspaceFiles] = useState<WorkspaceFile[]>([
     {
       id: 'f-1',
       name: `main${currentLanguage.extension}`,
       content: currentLanguage.defaultCode,
+      languageId: currentLanguage.id,
       language: currentLanguage.id,
       isEntry: true,
       lastModified: 'just now',
@@ -43,7 +39,8 @@ export default function App() {
     {
       id: 'f-2',
       name: 'README.md',
-      content: `# OmniCode Polyglot Workspace\n\nEquipped with 105 programming languages, live Google Search grounding, AST debugger, and native GitHub, Vercel, and Replit runtime engines.`,
+      content: `# OmniCode Polyglot Workspace\n\nEquipped with 105 language definitions, AI assistance, debugging tools, and integration panels.\n\nExecution is reported honestly: only configured runtimes execute code; unsupported runtimes are reported as unavailable.`,
+      languageId: 'markdown',
       language: 'markdown',
       isEntry: false,
       lastModified: 'just now',
@@ -52,6 +49,7 @@ export default function App() {
       id: 'f-3',
       name: '.replit',
       content: `run = "${currentLanguage.runtime} main${currentLanguage.extension}"\nentrypoint = "main${currentLanguage.extension}"\nhidden = [".config", "package-lock.json"]`,
+      languageId: 'toml',
       language: 'toml',
       isEntry: false,
       lastModified: 'just now',
@@ -59,40 +57,35 @@ export default function App() {
     {
       id: 'f-4',
       name: 'vercel.json',
-      content: `{\n  "version": 2,\n  "framework": "vite",\n  "regions": ["iad1", "fra1", "sin1"],\n  "cleanUrls": true\n}`,
+      content: `{\n  "version": 2,\n  "framework": "vite",\n  "cleanUrls": true\n}`,
+      languageId: 'json',
       language: 'json',
       isEntry: false,
       lastModified: 'just now',
     },
   ]);
 
-  // Sync main file content when code changes
   useEffect(() => {
     setWorkspaceFiles((prev) =>
       prev.map((f) => (f.isEntry ? { ...f, content: code, lastModified: 'just now' } : f))
     );
   }, [code]);
 
-  // Execution State
   const [isRunning, setIsRunning] = useState(false);
   const [executionResult, setExecutionResult] = useState<ExecutionResult | null>(null);
-
-  // Debugger State
   const [isDebugging, setIsDebugging] = useState(false);
   const [debugReport, setDebugReport] = useState<DebugReport | null>(null);
 
-  // AI Chat State
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome-1',
       role: 'assistant',
-      content: `Welcome to **OmniCode AI Platform**! 🌐\n\nOur application directly embodies the three pillars of modern cloud software engineering:\n- ⚡ **Replit IDE**: Multi-file workspace, interactive bash REPL, \`replit.nix\` packages, secrets, and live preview.\n- 🐙 **GitHub**: Real Git commit graph, branch management, pull requests with side-by-side code review & merge, issues tracker, and Gists.\n- ▲ **Vercel**: 1-click Edge Deployment pipeline, live responsive sandbox preview (Desktop/Tablet/Mobile), rollback history, and Web Vitals.\n- 🐞 **AI Debugger**: AST-level diagnostic engine for all **105 programming languages** with Big-O analysis and 1-click auto-patching.\n\nAsk me any programming question or explore the platform tabs above!`,
+      content: `Welcome to **OmniCode AI Platform**! 🌐\n\n- ⚡ **Workspace**: Multi-file coding workspace with language-aware editing.\n- 🐙 **GitHub**: Integration panel for repository operations supported by the connected backend.\n- ▲ **Vercel**: Integration panel for deployment configuration/status.\n- 🐞 **AI Debugger**: AI + offline diagnostic analysis across the language catalog.\n- ▶️ **Execution**: Real execution is used only for configured secure runtimes; unsupported languages are reported instead of receiving fake output.\n\nAsk me any programming question or explore the platform tabs above!`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
   const [isAiLoading, setIsAiLoading] = useState(false);
 
-  // Switch Language
   const handleSelectLanguage = (lang: ProgrammingLanguage, loadDefaultCode: boolean) => {
     setCurrentLanguage(lang);
     if (loadDefaultCode) {
@@ -102,6 +95,7 @@ export default function App() {
           id: 'f-1',
           name: `main${lang.extension}`,
           content: lang.defaultCode,
+          languageId: lang.id,
           language: lang.id,
           isEntry: true,
           lastModified: 'just now',
@@ -113,7 +107,6 @@ export default function App() {
     setExecutionResult(null);
   };
 
-  // Load sample bug for active language
   const handleLoadSampleBug = () => {
     if (currentLanguage.sampleBugCode) {
       setCode(currentLanguage.sampleBugCode);
@@ -123,7 +116,7 @@ export default function App() {
         {
           id: `bug-loaded-${Date.now()}`,
           role: 'assistant',
-          content: `⚠️ Loaded a realistic bug into \`main${currentLanguage.extension}\` (${currentLanguage.name}):\n\n> *${tip}*\n\nClick **"AI Debug"** or switch to the **AI Debugger** tab to diagnose and 1-click auto-patch this issue!`,
+          content: `⚠️ Loaded a sample bug into \`main${currentLanguage.extension}\` (${currentLanguage.name}):\n\n> *${tip}*\n\nUse **AI Debug** to diagnose it.`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
@@ -131,47 +124,48 @@ export default function App() {
     }
   };
 
-  // Reset to default boilerplate
   const handleResetCode = () => {
     setCode(currentLanguage.defaultCode);
     setDebugReport(null);
     setExecutionResult(null);
   };
 
-  // Run Code in sandbox
   const handleRunCode = async () => {
     setIsRunning(true);
     try {
       const res = await fetch('/api/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          code,
-          language: currentLanguage.id,
-        }),
+        body: JSON.stringify({ code, language: currentLanguage.id }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.errors || `Execution request failed (${res.status})`);
+      }
       setExecutionResult({
+        success: Boolean(data.success),
         output: data.output || '',
         errors: data.errors || '',
-        duration: data.duration || '24ms',
-        memory: data.memory || '14.2 MB',
-        exitCode: data.exitCode ?? 0,
+        duration: data.duration || '0ms',
+        memory: data.memory || 'N/A',
+        exitCode: typeof data.exitCode === 'number' ? data.exitCode : (data.success ? 0 : 1),
+        sandboxAvailable: data.sandboxAvailable,
       });
     } catch (err: any) {
       setExecutionResult({
+        success: false,
         output: '',
-        errors: `Execution error: ${err.message}`,
+        errors: `Execution error: ${err?.message || String(err)}`,
         duration: '0ms',
-        memory: '0 MB',
+        memory: 'N/A',
         exitCode: 1,
+        sandboxAvailable: false,
       });
     } finally {
       setIsRunning(false);
     }
   };
 
-  // Debug Code using AST & Gemini AI
   const handleDebugCode = async () => {
     setIsDebugging(true);
     setActivePlatform('debugger');
@@ -185,28 +179,25 @@ export default function App() {
           context: `Target file is main${currentLanguage.extension}, runtime is ${currentLanguage.runtime}`,
         }),
       });
-      const data = await res.json();
-      if (data.report) {
-        setDebugReport(data.report);
-      }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `Debug request failed (${res.status})`);
+      if (data.report) setDebugReport(data.report);
     } catch (err: any) {
       console.error('Debug error:', err);
+      setDebugReport(null);
     } finally {
       setIsDebugging(false);
     }
   };
 
-  // Apply code to editor
   const handleApplyCodeToEditor = (newCode: string) => {
     setCode(newCode);
     setActivePlatform('replit');
   };
 
-  // Send AI Chat Message
   const handleSendMessage = async (userPrompt: string, mode: string = 'general') => {
-    const userMsgId = `user-${Date.now()}`;
     const userMsg: ChatMessage = {
-      id: userMsgId,
+      id: `user-${Date.now()}`,
       role: 'user',
       content: userPrompt,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -219,10 +210,7 @@ export default function App() {
       const historyPayload = messages
         .filter((m) => m.id !== 'welcome-1')
         .slice(-6)
-        .map((m) => ({
-          role: m.role,
-          parts: [{ text: m.content }],
-        }));
+        .map((m) => ({ role: m.role, parts: [{ text: m.content }] }));
 
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -237,24 +225,27 @@ export default function App() {
         }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `AI request failed (${res.status})`);
 
-      const assistantMsg: ChatMessage = {
-        id: `assistant-${Date.now()}`,
-        role: 'assistant',
-        content: data.reply || "I've analyzed your code.",
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        groundingSources: data.groundingSources || [],
-      };
-
-      setMessages((prev) => [...prev, assistantMsg]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: data.reply || "I've analyzed your code.",
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          groundingSources: data.groundingSources || [],
+          usedWebSearch: Boolean(data.usedWebSearch),
+        },
+      ]);
     } catch (err: any) {
       setMessages((prev) => [
         ...prev,
         {
           id: `error-${Date.now()}`,
           role: 'assistant',
-          content: `Error communicating with OmniCode AI: ${err.message}`,
+          content: `Error communicating with OmniCode AI: ${err?.message || String(err)}`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
@@ -263,12 +254,11 @@ export default function App() {
     }
   };
 
-  // Hotkey support (Cmd/Ctrl + Enter to run code)
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
         e.preventDefault();
-        handleRunCode();
+        void handleRunCode();
       }
     };
     window.addEventListener('keydown', handleGlobalKeyDown);
@@ -277,7 +267,6 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 overflow-hidden font-sans">
-      {/* Top Universal Header */}
       <Header
         currentLanguage={currentLanguage}
         onOpenLanguageSelector={() => setIsLangModalOpen(true)}
@@ -293,11 +282,8 @@ export default function App() {
         onToggleAiDrawer={() => setIsAiDrawerOpen(!isAiDrawerOpen)}
       />
 
-      {/* Main Unified Platform Workspace */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Main Platform Body */}
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-          {/* 1. REPLIT PLATFORM */}
           {activePlatform === 'replit' && (
             <ReplitPlatform
               currentLanguage={currentLanguage}
@@ -316,19 +302,17 @@ export default function App() {
             />
           )}
 
-          {/* 2. GITHUB PLATFORM */}
           {activePlatform === 'github' && (
             <GitHubPlatform
               files={workspaceFiles}
               activeCode={code}
               onCommitChanges={(msg, branch) => {
-                // Keep commit log in chat
                 setMessages((prev) => [
                   ...prev,
                   {
                     id: `commit-${Date.now()}`,
                     role: 'assistant',
-                    content: `🐙 Committed changes to GitHub repository on branch \`${branch}\`:\n> "${msg}"`,
+                    content: `🐙 GitHub operation completed for branch \`${branch}\`:\n> "${msg}"`,
                     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                   },
                 ]);
@@ -338,7 +322,6 @@ export default function App() {
             />
           )}
 
-          {/* 3. VERCEL PLATFORM */}
           {activePlatform === 'vercel' && (
             <VercelPlatform
               activeCode={code}
@@ -348,7 +331,6 @@ export default function App() {
             />
           )}
 
-          {/* 4. AI DEBUGGER PLATFORM */}
           {activePlatform === 'debugger' && (
             <DebuggerPanel
               report={debugReport}
@@ -361,7 +343,6 @@ export default function App() {
           )}
         </div>
 
-        {/* Global AI Copilot Right Drawer (Expandable / Collapsible) */}
         {isAiDrawerOpen && (
           <div className="w-96 border-l border-slate-800 flex flex-col h-full bg-slate-900 shrink-0 shadow-2xl z-20">
             <div className="p-3 border-b border-slate-800 flex items-center justify-between bg-slate-950 text-xs">
@@ -390,7 +371,6 @@ export default function App() {
         )}
       </div>
 
-      {/* 100+ Languages Selection Modal */}
       <LanguageSelectorModal
         isOpen={isLangModalOpen}
         onClose={() => setIsLangModalOpen(false)}
@@ -400,4 +380,3 @@ export default function App() {
     </div>
   );
 }
-
