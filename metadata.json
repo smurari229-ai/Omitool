@@ -1,0 +1,6 @@
+{
+  "name": "OmniCode AI Studio",
+  "description": "Developer workspace powered by Gemini with global knowledge, 100+ programming languages, real-time web search grounding, advanced debugging, and GitHub, Vercel & Replit direct integrations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
