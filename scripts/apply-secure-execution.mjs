@@ -110,7 +110,7 @@ app.post("/api/vercel/deploy", async (req, res) => {
     const vercelResponse = await fetch("https://api.vercel.com/v13/deployments", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: "Bearer " + token,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
@@ -128,7 +128,7 @@ app.post("/api/vercel/deploy", async (req, res) => {
     return res.json({
       success: true,
       deploymentId: data.id,
-      previewUrl: data.url ? `https://${data.url}` : undefined,
+      previewUrl: data.url ? "https://" + data.url : undefined,
       dashboardUrl: data.inspectorUrl || "https://vercel.com/dashboard",
       target: data.target || "production",
       message: "Vercel accepted the real deployment request.",
